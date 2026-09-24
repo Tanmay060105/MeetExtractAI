@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(userData);
     } catch (error) {
       console.error("Failed to fetch user", error);
-      localStorage.removeItem("token");
+      // Do not clear localStorage here. Only clear on explicit 401 Unauthorized (handled in api.ts)
       setUser(null);
     }
   };

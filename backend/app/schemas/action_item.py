@@ -24,3 +24,10 @@ class ActionItemResponse(ActionItemBase):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+class ActionItemUpdate(BaseModel):
+    status: ActionStatus
+
+class ActionItemWithMeeting(ActionItemResponse):
+    meeting_title: str
+    latest_review_id: Optional[uuid.UUID] = None

@@ -120,3 +120,12 @@ export interface ActionItem {
 export interface ReviewQueueItem extends Omit<ActionItem, "owner_id" | "source_location"> {
   meeting_title: string;
 }
+
+export interface ActionItemWithMeeting extends ActionItem {
+  meeting_title: string;
+  latest_review_id: string | null;
+}
+
+export interface ActionItemUpdate {
+  status: ActionStatus;
+}
