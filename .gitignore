@@ -1,0 +1,33 @@
+# Node
+node_modules/
+.next/
+out/
+build/
+dist/
+.env*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+venv/
+env/
+.venv/
+
+# Environment
+.env
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+.venv_standard/
+.venv_broken2/
