@@ -129,3 +129,35 @@ export interface ActionItemWithMeeting extends ActionItem {
 export interface ActionItemUpdate {
   status: ActionStatus;
 }
+
+export type ReviewDecision = "APPROVED" | "EDITED_AND_APPROVED" | "REJECTED";
+
+export interface ActionItemEdit {
+  task?: string;
+  owner_name?: string;
+  deadline?: string;
+  status?: ActionStatus;
+}
+
+export interface ReviewCreate {
+  decision: ReviewDecision;
+  notes?: string;
+  edits?: ActionItemEdit;
+}
+
+export interface ReviewResponse {
+  id: string;
+  action_item_id: string;
+  reviewer_id?: string;
+  decision: ReviewDecision;
+  notes?: string;
+  previous_value?: Record<string, any>;
+  new_value?: Record<string, any>;
+  created_at: string;
+}
+
+export interface ReviewDetailResponse {
+  action_item: ReviewQueueItem;
+  transcript_context?: string;
+  reviews: ReviewResponse[];
+}
