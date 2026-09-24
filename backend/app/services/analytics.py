@@ -102,10 +102,10 @@ class AnalyticsService:
             if s.value not in existing_statuses:
                 by_status.append(StatusDistribution(status=s.value, count=0))
                 
-        # By Owner (resolved via Participant if available, else owner_name, else Unassigned)
+        # By Owner (resolved ONLY via Participant if available, else Unassigned)
         owner_query = (
             select(
-                func.coalesce(Participant.name, ActionItem.owner_name, "Unassigned").label("owner_name_resolved"), 
+                func.coalesce(Participant.name, "Unassigned").label("owner_name_resolved"), 
                 func.count(ActionItem.id)
             )
             .select_from(ActionItem)
