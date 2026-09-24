@@ -161,3 +161,44 @@ export interface ReviewDetailResponse {
   transcript_context?: string;
   reviews: ReviewResponse[];
 }
+
+export interface DashboardSummary {
+  total_meetings: number;
+  total_action_items: number;
+  completed_actions: number;
+  pending_actions: number;
+  needs_review: number;
+  overdue_actions: number;
+  completion_rate: number;
+  average_confidence: number;
+}
+
+export interface StatusDistribution {
+  status: ActionStatus;
+  count: number;
+}
+
+export interface OwnerDistribution {
+  owner: string;
+  count: number;
+}
+
+export interface ConfidenceDistribution {
+  high: number;
+  medium: number;
+  low: number;
+}
+
+export interface DeadlineDistribution {
+  overdue: number;
+  due_soon: number;
+  upcoming: number;
+  no_deadline: number;
+}
+
+export interface InsightsDistribution {
+  by_status: StatusDistribution[];
+  by_owner: OwnerDistribution[];
+  by_confidence: ConfidenceDistribution;
+  by_deadline: DeadlineDistribution;
+}

@@ -444,7 +444,6 @@ The system should identify actionable commitments from the transcript.
 
 ## 14.1 Extraction Fields
 
-Each action item should contain:
 
 ```text
 Task
