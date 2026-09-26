@@ -1,6 +1,7 @@
 import uuid
 import re
 from typing import List, Dict, Any, Optional
+# pyrefly: ignore [missing-import]
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -11,7 +12,7 @@ from app.models.transcript import Transcript
 class ValidationService:
     async def validate_action_items(self, db: AsyncSession, meeting_id: uuid.UUID, action_items: List[ActionItem]) -> dict:
         """
-        Validates a list of extracted action items for a given meeting.
+        Validates a list of extracted action items for a given meeting (with database persistence).
         """
         # Load participants
         participants_result = await db.execute(select(Participant).where(Participant.meeting_id == meeting_id))
@@ -22,6 +23,18 @@ class ValidationService:
         transcript = transcript_result.scalar_one_or_none()
         transcript_text = transcript.normalized_text.lower() if transcript and transcript.normalized_text else ""
         
+        summary = self.validate_in_memory(action_items, participants, transcript_text)
+        
+        for item in action_items:
+            db.add(item)
+            
+        return summary
+
+    def validate_in_memory(self, action_items: List[ActionItem], participants: List[Participant], transcript_text: str) -> dict:
+        """
+        Pure in-memory validation of action items. Modifies the action_items objects in place.
+        Does not query or persist to the database.
+        """
         summary = {
             "total": len(action_items),
             "valid": 0,
@@ -161,7 +174,6 @@ class ValidationService:
                 item.review_status = ReviewStatus.READY
             
             item.review_reasons = reasons if reasons else None
-            db.add(item)
             
         return summary
 

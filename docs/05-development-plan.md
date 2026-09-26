@@ -2758,7 +2758,7 @@ Documentation is complete
 MeetExtract AI is ready for final demonstration when:
 
 ```text
-[ ] A user can upload a meeting transcript
+[ ] User can upload a meeting transcript
 [ ] The system extracts transcript text
 [ ] AI identifies action items
 [ ] Structured output is validated
@@ -2778,18 +2778,18 @@ MeetExtract AI is ready for final demonstration when:
 [ ] Search works
 [ ] Filters work
 [ ] Sorting works
-[ ] CSV export works
-[ ] JSON export works
+[x] CSV export works
+[x] JSON export works
 [ ] Evaluation dataset exists
 [ ] Evaluation runs work
 [ ] Metrics are calculated
 [ ] Failure analysis works
-[ ] Critical tests pass
+[x] Critical tests pass
 [ ] UI is responsive
 [ ] Accessibility basics are verified
 [ ] Secrets are protected
 [ ] Documentation is complete
-[ ] Demo workflow works
+[x] Demo workflow works
 ```
 
 ---

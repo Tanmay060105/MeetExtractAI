@@ -10,6 +10,7 @@ from app.api.v1.endpoints import (
     auth,
     extraction,
     validation,
+    export,
 )
 
 api_router = APIRouter()
@@ -23,3 +24,5 @@ api_router.include_router(action_items.router, prefix="/action-items", tags=["ac
 api_router.include_router(reviews.router, prefix="/reviews", tags=["reviews"])
 api_router.include_router(evaluations.router, prefix="/evaluations", tags=["evaluations"])
 api_router.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
+api_router.include_router(export.router, prefix="/export", tags=["export"])
+

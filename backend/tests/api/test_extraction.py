@@ -14,14 +14,14 @@ from app.services.ai.base import AIProvider
 from app.schemas.extraction import ExtractionResult, ExtractedAction
 from app.services.extraction import ExtractionService
 
+from datetime import datetime
+from typing import Optional
+
 class MockAIProvider(AIProvider):
     def __init__(self, actions: list[dict], fail: bool = False):
         self.actions = actions
         self.fail = fail
         
-from datetime import datetime
-from typing import Optional
-
     async def extract_action_items(self, transcript_text: str, reference_date: Optional[datetime] = None) -> ExtractionResult:
         if self.fail:
             raise Exception("Mock provider failure")

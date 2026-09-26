@@ -7,6 +7,7 @@ import { fetchApi, ReviewQueueItem } from "@/lib/api";
 import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { Alert } from "@/components/ui/alert";
 
 export default function ReviewQueuePage() {
   const [items, setItems] = useState<ReviewQueueItem[]>([]);
@@ -38,12 +39,9 @@ export default function ReviewQueuePage() {
 
   if (error) {
     return (
-      <div className="rounded-md bg-red-50 p-4 border border-red-200">
-        <div className="flex">
-          <AlertCircle className="h-5 w-5 text-red-400 mr-3" />
-          <div className="text-sm text-red-700">{error}</div>
-        </div>
-      </div>
+      <Alert variant="destructive">
+        {error}
+      </Alert>
     );
   }
 

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
-import { AlertCircle } from "lucide-react";
+import { Alert } from "@/components/ui/alert";
 import Link from "next/link";
 
 export default function LoginPage() {
@@ -59,14 +59,9 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
-              <div className="rounded-md bg-red-50 p-4 border border-red-200">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <AlertCircle className="h-5 w-5 text-red-400" aria-hidden="true" />
-                  </div>
-                  <div className="ml-3 text-sm text-red-700">{error}</div>
-                </div>
-              </div>
+              <Alert variant="destructive">
+                {error}
+              </Alert>
             )}
             <div className="space-y-4">
               <div className="space-y-1">

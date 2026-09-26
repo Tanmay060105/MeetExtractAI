@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { fetchApi, InsightsDistribution } from "@/lib/api";
 import { Spinner } from "@/components/ui/spinner";
 import { AlertCircle, LineChart, BarChart3, PieChart, Users, Calendar } from "lucide-react";
+import { Alert } from "@/components/ui/alert";
 
 export default function InsightsPage() {
   const [data, setData] = useState<InsightsDistribution | null>(null);
@@ -36,12 +37,9 @@ export default function InsightsPage() {
 
   if (error) {
     return (
-      <div className="rounded-md bg-red-50 p-4 border border-red-200">
-        <div className="flex">
-          <AlertCircle className="h-5 w-5 text-red-400 mr-3" />
-          <div className="text-sm text-red-700">{error}</div>
-        </div>
-      </div>
+      <Alert variant="destructive">
+        {error}
+      </Alert>
     );
   }
 

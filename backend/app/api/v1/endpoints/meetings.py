@@ -24,10 +24,14 @@ MAX_FILE_BYTES = 10 * 1024 * 1024
 
 async def process_meeting_background(meeting_id: uuid.UUID, user_id: uuid.UUID):
     try:
+        print(f"Starting background extraction for meeting {meeting_id}")
         async with AsyncSessionLocal() as session:
             extraction_service = ExtractionService()
             await extraction_service.extract_meeting_actions(db=session, meeting_id=meeting_id, user_id=user_id)
+        print(f"Successfully finished background extraction for meeting {meeting_id}")
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         import logging
         logging.getLogger(__name__).error(f"Background extraction failed: {e}")
 

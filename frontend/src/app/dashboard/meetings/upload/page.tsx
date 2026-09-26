@@ -9,6 +9,7 @@ import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { fetchApi, Meeting } from "@/lib/api";
+import { Alert } from "@/components/ui/alert";
 
 export default function UploadMeetingPage() {
   const [title, setTitle] = useState("");
@@ -97,14 +98,9 @@ export default function UploadMeetingPage() {
         </CardHeader>
         <CardContent className="space-y-6">
           {error && (
-            <div className="rounded-md bg-red-50 p-4 border border-red-200">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <AlertCircle className="h-5 w-5 text-red-400" aria-hidden="true" />
-                </div>
-                <div className="ml-3 text-sm text-red-700">{error}</div>
-              </div>
-            </div>
+            <Alert variant="destructive">
+              {error}
+            </Alert>
           )}
 
           <div className="space-y-2">

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { fetchApi, ReviewDetailResponse, ActionStatus, ReviewDecision, ActionItemEdit } from "@/lib/api";
 import { AlertCircle, CheckCircle2, ChevronLeft, Calendar, User, FileText, Check, X } from "lucide-react";
 import Link from "next/link";
+import { Alert } from "@/components/ui/alert";
 
 export default function ReviewDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -80,12 +81,11 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
 
   if (error || !data) {
     return (
-      <div className="rounded-md bg-red-50 p-4 border border-red-200">
-        <div className="flex">
-          <AlertCircle className="h-5 w-5 text-red-400 mr-3" />
-          <div className="text-sm text-red-700">{error}</div>
-        </div>
-        <Button onClick={() => router.push("/dashboard/reviews")} variant="secondary" className="mt-4">
+      <div className="space-y-4">
+        <Alert variant="destructive">
+          {error || "Item not found"}
+        </Alert>
+        <Button onClick={() => router.push("/dashboard/reviews")} variant="secondary">
           Back to Queue
         </Button>
       </div>
@@ -116,15 +116,9 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           {isNeedsReview && (
-            <div className="rounded-md bg-amber-50 p-4 border border-amber-200 flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="flex">
-                <AlertCircle className="h-5 w-5 text-amber-500 mr-3 shrink-0 mt-0.5" />
-                <div>
-                  <h3 className="text-sm font-medium text-amber-800">Flagged Reasons</h3>
-                  <div className="mt-1 text-sm text-amber-700">
-                    {action_item.review_reasons?.join(", ")}
-                  </div>
-                </div>
+            <Alert variant="warning" title="Flagged Reasons" className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div>
+                {action_item.review_reasons?.join(", ")}
               </div>
               <div className="flex gap-2 shrink-0">
                 {!isEditing ? (
@@ -173,7 +167,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
                   Reject
                 </Button>
               </div>
-            </div>
+            </Alert>
           )}
 
           <Card>

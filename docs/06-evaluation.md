@@ -570,6 +570,28 @@ F1 = 2 × (Precision × Recall)
 
 F1 should be used as one evaluation metric, not the only metric.
 
+## 19.1 Metric Edge Cases
+
+Evaluation handles edge cases with the following strict mathematical conventions:
+
+* **0 Ground Truth + 0 Predictions**:
+  * Precision = 1.0
+  * Recall = 1.0
+  * F1 = 1.0
+  *(System correctly identified there were no actions)*
+
+* **Ground Truth > 0 + 0 Predictions**:
+  * Precision = 0.0
+  * Recall = 0.0
+  * F1 = 0.0
+  *(System completely missed existing actions)*
+
+* **0 Ground Truth + Predictions > 0**:
+  * Precision = 0.0
+  * Recall = 0.0
+  * F1 = 0.0
+  *(System hallucinated actions where none existed)*
+
 ---
 
 # 20. Task Evaluation

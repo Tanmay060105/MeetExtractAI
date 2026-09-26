@@ -10,10 +10,15 @@ import {
   ClipboardCheck, 
   LineChart, 
   Scale, 
-  Settings 
+  Settings,
+  X
 } from "lucide-react";
 
-export function Sidebar() {
+interface SidebarProps {
+  onClose?: () => void;
+}
+
+export function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname();
 
   const routes = [
@@ -43,11 +48,22 @@ export function Sidebar() {
 
   return (
     <div className="flex h-full w-64 flex-col overflow-y-auto border-r border-slate-200 bg-slate-50 px-3 py-4">
-      <div className="mb-8 px-4 flex items-center">
-        <div className="h-8 w-8 rounded bg-indigo-600 flex items-center justify-center mr-3 shadow-sm">
-          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+      <div className="mb-8 px-4 flex items-center justify-between">
+        <div className="flex items-center">
+          <div className="h-8 w-8 rounded bg-indigo-600 flex items-center justify-center mr-3 shadow-sm">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+          </div>
+          <span className="text-xl font-bold tracking-tight text-slate-900">MeetExtract</span>
         </div>
-        <span className="text-xl font-bold tracking-tight text-slate-900">MeetExtract</span>
+        {onClose && (
+          <button 
+            onClick={onClose}
+            className="lg:hidden rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
+            aria-label="Close menu"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
       </div>
 
       <nav className="flex-1 space-y-6">
@@ -64,6 +80,7 @@ export function Sidebar() {
                   <li key={item.href}>
                     <Link
                       href={item.href}
+                      onClick={onClose}
                       className={cn(
                         "group flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors",
                         isActive

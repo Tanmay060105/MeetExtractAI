@@ -1482,8 +1482,7 @@ GET  /api/v1/evaluations/runs/{run_id}
 # 12.8 Export Endpoints
 
 ```text
-GET /api/v1/export/action-items?format=csv
-GET /api/v1/export/action-items?format=json
+POST /api/v1/export/action-items
 ```
 
 ---

@@ -9,6 +9,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { fetchApi, ActionItemWithMeeting, ActionStatus } from "@/lib/api";
 import { AlertCircle, Calendar, ChevronLeft, Link as LinkIcon, User, CheckCircle2, Clock, XCircle, HelpCircle, AlertTriangle } from "lucide-react";
 import Link from "next/link";
+import { Alert } from "@/components/ui/alert";
 
 function getStatusIcon(status: ActionStatus) {
   switch (status) {
@@ -84,14 +85,16 @@ export default function ActionItemDetailPage({ params }: { params: Promise<{ id:
 
   if (error || !item) {
     return (
-      <div className="rounded-md bg-red-50 p-4 border border-red-200">
-        <div className="flex">
-          <AlertCircle className="h-5 w-5 text-red-400 mr-3" />
-          <div className="text-sm text-red-700">{error}</div>
-        </div>
-        <Button onClick={() => router.push("/dashboard/actions")} variant="secondary" className="mt-4">
+      <div className="space-y-4">
+        <Alert variant="destructive">
+          {error || "Item not found"}
+        </Alert>
+        <Button onClick={() => router.push("/dashboard/actions")} variant="secondary">
           Back to Actions
         </Button>
+      </div>
+    );
+  }
       </div>
     );
   }
@@ -124,9 +127,7 @@ export default function ActionItemDetailPage({ params }: { params: Promise<{ id:
               <option value="BLOCKED">Blocked</option>
               <option value="NEEDS_REVIEW" disabled>Needs Review</option>
             </select>
-          </div>
-        </div>
-      </div>
+      </Alert>
 
       {item.review_status === "NEEDS_REVIEW" && (
         <div className="rounded-md bg-amber-50 p-4 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">

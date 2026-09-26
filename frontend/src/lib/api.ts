@@ -72,6 +72,69 @@ export async function fetchApi<T>(endpoint: string, options: RequestOptions = {}
   return response.json();
 }
 
+export async function downloadApi(endpoint: string, filename: string, options: RequestOptions = {}): Promise<void> {
+  const { requireAuth = true, headers, ...restOptions } = options;
+  
+  const mergedHeaders: Record<string, string> = {
+    ...headers as Record<string, string>,
+  };
+
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData || 
+                     (options.body && (options.body as any).constructor?.name === 'FormData');
+
+  if (!isFormData) {
+    mergedHeaders["Content-Type"] = mergedHeaders["Content-Type"] || "application/json";
+  }
+
+  if (requireAuth && typeof window !== "undefined") {
+    const token = localStorage.getItem("token");
+    if (token) {
+      mergedHeaders["Authorization"] = `Bearer ${token}`;
+    }
+  }
+
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    headers: mergedHeaders,
+    ...restOptions,
+  });
+
+  if (response.status === 401 && typeof window !== "undefined") {
+    localStorage.removeItem("token");
+    if (window.location.pathname !== "/login") {
+        window.location.href = "/login";
+    }
+  }
+
+  if (!response.ok) {
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      data = null;
+    }
+    let errorMessage = data?.detail;
+    if (Array.isArray(data?.detail)) {
+      errorMessage = data.detail.map((e: any) => `${e.loc?.join('.') || 'field'}: ${e.msg}`).join(', ');
+    }
+
+    throw new APIError(
+      errorMessage || `API request failed with status ${response.status}`,
+      response.status,
+      data
+    );
+  }
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  window.URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+}
+
 export type ProcessingStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
 
 export interface Meeting {
@@ -201,4 +264,49 @@ export interface InsightsDistribution {
   by_owner: OwnerDistribution[];
   by_confidence: ConfidenceDistribution;
   by_deadline: DeadlineDistribution;
+}
+
+// --- Evaluation Types ---
+
+export interface EvaluationDataset {
+  id: string;
+  name: string;
+  description: string | null;
+  version: string;
+  created_at: string;
+}
+
+export interface EvaluationSample {
+  id: string;
+  dataset_id: string;
+  transcript: string;
+  ground_truth: Record<string, any>;
+  created_at: string;
+}
+
+export interface EvaluationDatasetDetail extends EvaluationDataset {
+  samples: EvaluationSample[];
+}
+
+export type EvaluationRunStatus = "PENDING" | "RUNNING" | "COMPLETED" | "FAILED";
+
+export interface EvaluationRun {
+  id: string;
+  dataset_id: string;
+  model_version: string;
+  prompt_version: string;
+  status: EvaluationRunStatus;
+  started_at: string;
+  completed_at: string | null;
+}
+
+export interface EvaluationResult {
+  id: string;
+  run_id: string;
+  sample_id: string;
+  prediction: Record<string, any> | null;
+  ground_truth: Record<string, any>;
+  metrics: Record<string, any> | null;
+  failure_type: string | null;
+  created_at: string;
 }

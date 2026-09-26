@@ -2,13 +2,14 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckSquare, Search, Filter, AlertCircle, ChevronRight, User, Calendar, Clock, CheckCircle2, XCircle, HelpCircle, AlertTriangle } from "lucide-react";
+import { CheckSquare, Search, Filter, AlertCircle, ChevronRight, User, Calendar, Clock, CheckCircle2, XCircle, HelpCircle, AlertTriangle, Download, FileText, FileJson, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
-import { fetchApi, ActionItemWithMeeting, ActionStatus } from "@/lib/api";
+import { fetchApi, downloadApi, ActionItemWithMeeting, ActionStatus } from "@/lib/api";
 import Link from "next/link";
+import { Alert } from "@/components/ui/alert";
 
 type FilterType = "ALL" | "PENDING" | "COMPLETED" | "OVERDUE" | "NEEDS_REVIEW" | "UNASSIGNED";
 type SortType = "DEADLINE" | "CONFIDENCE" | "STATUS" | "CREATED_DATE" | "MEETING";
@@ -32,6 +33,34 @@ export default function ActionItemsPage() {
   const [activeFilter, setActiveFilter] = useState<FilterType>("ALL");
   const [sortBy, setSortBy] = useState<SortType>("CREATED_DATE");
   const [sortDesc, setSortDesc] = useState(true);
+
+  const [isExporting, setIsExporting] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+
+  const handleExport = async (format: "csv" | "json") => {
+    if (filteredAndSortedItems.length === 0) {
+      alert("No action items to export.");
+      return;
+    }
+    
+    try {
+      setIsExporting(true);
+      setShowExportMenu(false);
+      const ids = filteredAndSortedItems.map(item => item.id);
+      await downloadApi(
+        "/export/action-items", 
+        `action_items_export_${new Date().toISOString().split('T')[0]}.${format}`,
+        {
+          method: "POST",
+          body: JSON.stringify({ format, action_item_ids: ids })
+        }
+      );
+    } catch (err: any) {
+      alert(`Export failed: ${err.message || "Unknown error"}`);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   useEffect(() => {
     const loadActions = async () => {
@@ -118,12 +147,9 @@ export default function ActionItemsPage() {
 
   if (error) {
     return (
-      <div className="rounded-md bg-red-50 p-4 border border-red-200">
-        <div className="flex">
-          <AlertCircle className="h-5 w-5 text-red-400 mr-3" />
-          <div className="text-sm text-red-700">{error}</div>
-        </div>
-      </div>
+      <Alert variant="destructive">
+        {error}
+      </Alert>
     );
   }
 
@@ -146,6 +172,35 @@ export default function ActionItemsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Action Items</h1>
           <p className="text-slate-500 mt-1">Track and manage all extracted tasks across your meetings.</p>
+        </div>
+        <div className="relative">
+          <Button 
+            onClick={() => setShowExportMenu(!showExportMenu)} 
+            disabled={isExporting || items.length === 0}
+            variant="secondary"
+            className="flex items-center gap-2"
+          >
+            {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            Export
+          </Button>
+          {showExportMenu && (
+            <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-md shadow-lg z-10 py-1">
+              <button
+                onClick={() => handleExport("csv")}
+                className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition-colors"
+              >
+                <FileText className="h-4 w-4 text-slate-400" />
+                Download CSV
+              </button>
+              <button
+                onClick={() => handleExport("json")}
+                className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition-colors"
+              >
+                <FileJson className="h-4 w-4 text-slate-400" />
+                Download JSON
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -210,9 +265,55 @@ export default function ActionItemsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
+        <>
+          {/* Mobile Card View */}
+          <div className="grid gap-4 md:hidden">
+            {filteredAndSortedItems.map((item) => (
+              <Card key={item.id} className="overflow-hidden">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    {getStatusBadge(item.status)}
+                    {item.review_status === "NEEDS_REVIEW" && (
+                      <Badge variant="outline" className="text-amber-600 border-amber-200">
+                        <AlertTriangle className="w-3 h-3 mr-1" />
+                        Needs Review
+                      </Badge>
+                    )}
+                  </div>
+                  <h3 className="font-semibold text-slate-900 mb-2">{item.task}</h3>
+                  <div className="space-y-2 text-sm text-slate-600 mb-4">
+                    <div className="flex items-center">
+                      <User className="w-4 h-4 mr-2 opacity-50" />
+                      <span className={!item.owner_name ? "italic opacity-50" : ""}>
+                        {item.owner_name || "Unassigned"}
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <Calendar className="w-4 h-4 mr-2 opacity-50" />
+                      <span className={!item.deadline ? "italic opacity-50" : (new Date(item.deadline) < new Date() && item.status !== "COMPLETED" ? "text-red-600 font-medium" : "")}>
+                        {item.deadline ? new Date(item.deadline).toLocaleDateString() : "None"}
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <FileText className="w-4 h-4 mr-2 opacity-50" />
+                      <span className="truncate">{item.meeting_title}</span>
+                    </div>
+                  </div>
+                  <Link 
+                    href={`/dashboard/actions/${item.id}`}
+                    className="flex items-center justify-center w-full py-2 bg-slate-50 hover:bg-slate-100 text-indigo-600 font-medium rounded-md transition-colors"
+                  >
+                    View Details
+                  </Link>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden md:block bg-white border rounded-xl shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
               <thead className="bg-slate-50 border-b text-slate-500 uppercase font-medium text-xs">
                 <tr>
                   <th className="px-4 py-3 min-w-[250px]">Task</th>
@@ -269,9 +370,10 @@ export default function ActionItemsPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+              </table>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

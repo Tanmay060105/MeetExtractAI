@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertCircle, Calendar, CheckCircle2, Clock, FileText, ChevronLeft, Search, User, Lightbulb } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Alert } from "@/components/ui/alert";
 
 export default function MeetingDetailsPage({ params }: { params: Promise<{ meetingId: string }> }) {
   const router = useRouter();
@@ -108,17 +109,9 @@ export default function MeetingDetailsPage({ params }: { params: Promise<{ meeti
         <Link href="/dashboard/meetings" className="inline-flex items-center text-sm text-slate-500 hover:text-slate-700 transition-colors">
           <ChevronLeft className="w-4 h-4 mr-1" /> Back to meetings
         </Link>
-        <div className="rounded-md bg-red-50 p-4 border border-red-200 max-w-3xl">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <AlertCircle className="h-5 w-5 text-red-400" aria-hidden="true" />
-            </div>
-            <div className="ml-3 text-sm text-red-700">
-              <p className="font-medium">Error loading meeting</p>
-              <p className="mt-1">{error || "Meeting not found"}</p>
-            </div>
-          </div>
-        </div>
+        <Alert variant="destructive" title="Error loading meeting">
+          {error || "Meeting not found"}
+        </Alert>
       </div>
     );
   }
