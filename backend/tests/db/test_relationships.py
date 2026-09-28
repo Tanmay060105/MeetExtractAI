@@ -44,14 +44,14 @@ async def test_cascades(db_session: AsyncSession):
     )
     db_session.add(review)
     
-    dataset = EvaluationDataset(name="DS", version="1")
+    dataset = EvaluationDataset(name="DS", version="1", user_id=user.id)
     db_session.add(dataset)
     await db_session.flush()
     
     sample = EvaluationSample(dataset_id=dataset.id, transcript="T", ground_truth={})
     db_session.add(sample)
     
-    run = EvaluationRun(dataset_id=dataset.id, model_version="1", prompt_version="1", status=EvaluationRunStatus.COMPLETED)
+    run = EvaluationRun(dataset_id=dataset.id, user_id=user.id, model_version="1", prompt_version="1", status=EvaluationRunStatus.COMPLETED)
     db_session.add(run)
     await db_session.flush()
     

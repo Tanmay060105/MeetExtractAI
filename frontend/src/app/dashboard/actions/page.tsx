@@ -2,27 +2,18 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckSquare, Search, Filter, AlertCircle, ChevronRight, User, Calendar, Clock, CheckCircle2, XCircle, HelpCircle, AlertTriangle, Download, FileText, FileJson, Loader2 } from "lucide-react";
+import { CheckSquare, Search, ChevronRight, User, Calendar, FileText, FileJson, Loader2, Download, Video, ShieldAlert } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { Badge } from "@/components/ui/badge";
 import { fetchApi, downloadApi, ActionItemWithMeeting, ActionStatus } from "@/lib/api";
 import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
+import { SectionHeader } from "@/components/ui/section-header";
+import { StatusIndicator } from "@/components/ui/status-indicator";
 
 type FilterType = "ALL" | "PENDING" | "COMPLETED" | "OVERDUE" | "NEEDS_REVIEW" | "UNASSIGNED";
 type SortType = "DEADLINE" | "CONFIDENCE" | "STATUS" | "CREATED_DATE" | "MEETING";
-
-function getStatusBadge(status: ActionStatus) {
-  switch (status) {
-    case "COMPLETED": return <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50"><CheckCircle2 className="w-3 h-3 mr-1"/> Completed</Badge>;
-    case "IN_PROGRESS": return <Badge className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50"><Clock className="w-3 h-3 mr-1"/> In Progress</Badge>;
-    case "BLOCKED": return <Badge className="bg-red-50 text-red-700 border-red-200 hover:bg-red-50"><XCircle className="w-3 h-3 mr-1"/> Blocked</Badge>;
-    case "NEEDS_REVIEW": return <Badge className="bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-50"><AlertTriangle className="w-3 h-3 mr-1"/> Needs Review</Badge>;
-    default: return <Badge variant="secondary" className="bg-slate-100 text-slate-700 hover:bg-slate-100"><HelpCircle className="w-3 h-3 mr-1"/> Pending</Badge>;
-  }
-}
 
 export default function ActionItemsPage() {
   const [items, setItems] = useState<ActionItemWithMeeting[]>([]);
@@ -79,7 +70,6 @@ export default function ActionItemsPage() {
   const filteredAndSortedItems = useMemo(() => {
     let result = [...items];
 
-    // 1. Search (Task, Owner, Meeting)
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(item => 
@@ -89,7 +79,6 @@ export default function ActionItemsPage() {
       );
     }
 
-    // 2. Filter
     const now = new Date();
     switch (activeFilter) {
       case "PENDING":
@@ -109,12 +98,11 @@ export default function ActionItemsPage() {
         break;
     }
 
-    // 3. Sort
     result.sort((a, b) => {
       let comparison = 0;
       switch (sortBy) {
         case "DEADLINE":
-          if (!a.deadline) comparison = 1; // nulls last
+          if (!a.deadline) comparison = 1;
           else if (!b.deadline) comparison = -1;
           else comparison = new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
           break;
@@ -156,9 +144,9 @@ export default function ActionItemsPage() {
   const FilterButton = ({ type, label }: { type: FilterType, label: string }) => (
     <button
       onClick={() => setActiveFilter(type)}
-      className={`px-3 py-1.5 text-sm font-medium rounded-full transition-colors ${
+      className={`px-4 py-1.5 text-sm font-medium rounded-full transition-colors ${
         activeFilter === type 
-          ? "bg-indigo-100 text-indigo-700" 
+          ? "bg-indigo-100 text-indigo-700 ring-1 ring-indigo-200" 
           : "text-slate-600 hover:bg-slate-100"
       }`}
     >
@@ -168,20 +156,19 @@ export default function ActionItemsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Action Items</h1>
-          <p className="text-slate-500 mt-1">Track and manage all extracted tasks across your meetings.</p>
-        </div>
+      <SectionHeader 
+        title="Action Items" 
+        description="Track and manage all extracted tasks across your meetings."
+      >
         <div className="relative">
           <Button 
             onClick={() => setShowExportMenu(!showExportMenu)} 
             disabled={isExporting || items.length === 0}
-            variant="secondary"
-            className="flex items-center gap-2"
+            variant="outline"
+            className="flex items-center gap-2 bg-white"
           >
             {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-            Export
+            Export List
           </Button>
           {showExportMenu && (
             <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-md shadow-lg z-10 py-1">
@@ -202,15 +189,15 @@ export default function ActionItemsPage() {
             </div>
           )}
         </div>
-      </div>
+      </SectionHeader>
 
-      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-white p-4 rounded-xl border shadow-sm">
+      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
         <div className="relative flex-1 w-full max-w-sm">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
           <Input
             type="search"
             placeholder="Search tasks, owners, or meetings..."
-            className="pl-9 bg-slate-50 border-slate-200"
+            className="pl-9 bg-slate-50 border-slate-200 h-9"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -226,10 +213,10 @@ export default function ActionItemsPage() {
         </div>
       </div>
 
-      <div className="flex justify-end items-center text-sm text-slate-500 gap-2">
-        <span>Sort by:</span>
+      <div className="flex justify-end items-center text-sm text-slate-500 gap-2 px-1">
+        <span className="font-medium uppercase tracking-wider text-xs">Sort by:</span>
         <select 
-          className="bg-transparent border-none font-medium text-slate-700 focus:ring-0 cursor-pointer"
+          className="bg-transparent border-none font-medium text-slate-700 focus:ring-0 cursor-pointer h-8 text-sm p-0 pr-4"
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as SortType)}
         >
@@ -241,7 +228,7 @@ export default function ActionItemsPage() {
         </select>
         <button 
           onClick={() => setSortDesc(!sortDesc)} 
-          className="ml-2 hover:bg-slate-100 p-1 rounded"
+          className="hover:bg-slate-100 p-1.5 rounded-md text-slate-400 hover:text-slate-700 transition-colors"
           title={sortDesc ? "Descending" : "Ascending"}
         >
           {sortDesc ? "↓" : "↑"}
@@ -249,13 +236,13 @@ export default function ActionItemsPage() {
       </div>
 
       {filteredAndSortedItems.length === 0 ? (
-        <Card>
+        <Card className="shadow-sm border-dashed">
           <CardContent className="p-0">
             <div className="flex flex-col items-center justify-center p-16 text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-50 border border-slate-100">
                 <CheckSquare className="h-8 w-8 text-slate-400" />
               </div>
-              <h3 className="mt-4 text-lg font-semibold text-slate-900">No action items found</h3>
+              <h3 className="mt-4 text-base font-medium text-slate-900">No action items found</h3>
               <p className="mt-2 text-sm text-slate-500 max-w-sm">
                 {items.length === 0 
                   ? "When you process meetings, the extracted action items will appear here." 
@@ -269,108 +256,105 @@ export default function ActionItemsPage() {
           {/* Mobile Card View */}
           <div className="grid gap-4 md:hidden">
             {filteredAndSortedItems.map((item) => (
-              <Card key={item.id} className="overflow-hidden">
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    {getStatusBadge(item.status)}
+              <div key={item.id} className={`bg-white rounded-xl overflow-hidden shadow-sm border ${item.review_status === 'NEEDS_REVIEW' ? 'border-amber-200 ring-1 ring-amber-50' : 'border-slate-200'}`}>
+                <div className="p-5 space-y-4">
+                  <div className="flex justify-between items-start gap-2">
+                    <StatusIndicator status={item.status} />
                     {item.review_status === "NEEDS_REVIEW" && (
-                      <Badge variant="outline" className="text-amber-600 border-amber-200">
-                        <AlertTriangle className="w-3 h-3 mr-1" />
-                        Needs Review
-                      </Badge>
+                       <StatusIndicator status="NEEDS_REVIEW" />
                     )}
                   </div>
-                  <h3 className="font-semibold text-slate-900 mb-2">{item.task}</h3>
-                  <div className="space-y-2 text-sm text-slate-600 mb-4">
+                  <h3 className="font-medium text-slate-900 leading-snug">{item.task}</h3>
+                  <div className="space-y-2 text-sm text-slate-600">
                     <div className="flex items-center">
-                      <User className="w-4 h-4 mr-2 opacity-50" />
-                      <span className={!item.owner_name ? "italic opacity-50" : ""}>
+                      <User className="w-3.5 h-3.5 mr-2 text-slate-400" />
+                      <span className={!item.owner_name ? "italic text-slate-400" : "font-medium"}>
                         {item.owner_name || "Unassigned"}
                       </span>
                     </div>
                     <div className="flex items-center">
-                      <Calendar className="w-4 h-4 mr-2 opacity-50" />
-                      <span className={!item.deadline ? "italic opacity-50" : (new Date(item.deadline) < new Date() && item.status !== "COMPLETED" ? "text-red-600 font-medium" : "")}>
+                      <Calendar className="w-3.5 h-3.5 mr-2 text-slate-400" />
+                      <span className={!item.deadline ? "italic text-slate-400" : (new Date(item.deadline) < new Date() && item.status !== "COMPLETED" ? "text-rose-600 font-medium" : "font-medium")}>
                         {item.deadline ? new Date(item.deadline).toLocaleDateString() : "None"}
                       </span>
                     </div>
                     <div className="flex items-center">
-                      <FileText className="w-4 h-4 mr-2 opacity-50" />
+                      <Video className="w-3.5 h-3.5 mr-2 text-slate-400" />
                       <span className="truncate">{item.meeting_title}</span>
                     </div>
                   </div>
                   <Link 
                     href={`/dashboard/actions/${item.id}`}
-                    className="flex items-center justify-center w-full py-2 bg-slate-50 hover:bg-slate-100 text-indigo-600 font-medium rounded-md transition-colors"
+                    className="flex items-center justify-center w-full py-2.5 bg-slate-50 hover:bg-slate-100 text-indigo-600 font-medium text-sm rounded-md transition-colors border border-slate-100"
                   >
                     View Details
                   </Link>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ))}
           </div>
 
-          {/* Desktop Table View */}
-          <div className="hidden md:block bg-white border rounded-xl shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-              <thead className="bg-slate-50 border-b text-slate-500 uppercase font-medium text-xs">
-                <tr>
-                  <th className="px-4 py-3 min-w-[250px]">Task</th>
-                  <th className="px-4 py-3">Meeting</th>
-                  <th className="px-4 py-3">Owner</th>
-                  <th className="px-4 py-3">Deadline</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3 text-right">Details</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredAndSortedItems.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/50 transition-colors group">
-                    <td className="px-4 py-3">
-                      <div className="font-medium text-slate-900 line-clamp-2">{item.task}</div>
+          {/* Desktop Premium List View */}
+          <div className="hidden md:block bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            {/* Table Header */}
+            <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              <div className="col-span-5">Task</div>
+              <div className="col-span-2">Owner</div>
+              <div className="col-span-2">Deadline</div>
+              <div className="col-span-2">Status</div>
+              <div className="col-span-1"></div>
+            </div>
+            
+            <div className="divide-y divide-slate-100">
+              {filteredAndSortedItems.map((item) => (
+                 <Link 
+                   key={item.id} 
+                   href={`/dashboard/actions/${item.id}`}
+                   className={`group grid grid-cols-12 gap-4 px-6 py-4 items-center transition-colors hover:bg-slate-50 ${item.review_status === 'NEEDS_REVIEW' ? 'bg-amber-50/10' : ''}`}
+                 >
+                   <div className="col-span-5 pr-4">
+                      <div className="flex items-start gap-3">
+                         <h4 className="text-sm font-medium text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-2">{item.task}</h4>
+                         {item.review_status === "NEEDS_REVIEW" && (
+                            <div className="mt-0.5 shrink-0">
+                               <ShieldAlert className="w-4 h-4 text-amber-500" />
+                            </div>
+                         )}
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-1 text-xs text-slate-500">
+                        <Video className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span className="truncate max-w-[250px]">{item.meeting_title}</span>
+                      </div>
+                   </div>
+                   
+                   <div className="col-span-2">
+                     <div className="flex items-center text-sm">
+                       <User className="w-4 h-4 mr-1.5 text-slate-400" />
+                       <span className={!item.owner_name ? "italic text-slate-500" : "font-medium text-slate-700 truncate"}>{item.owner_name || "Unassigned"}</span>
+                     </div>
+                   </div>
+                   
+                   <div className="col-span-2">
+                     <div className="flex items-center text-sm">
+                       <Calendar className="w-4 h-4 mr-1.5 text-slate-400" />
+                       <span className={!item.deadline ? "italic text-slate-500" : (new Date(item.deadline) < new Date() && item.status !== "COMPLETED" ? "text-rose-600 font-medium" : "font-medium text-slate-700")}>
+                         {item.deadline ? new Date(item.deadline).toLocaleDateString() : "None"}
+                       </span>
+                     </div>
+                   </div>
+                   
+                   <div className="col-span-2 flex flex-col gap-1.5">
+                      <StatusIndicator status={item.status} />
                       {item.review_status === "NEEDS_REVIEW" && (
-                        <div className="flex items-center text-xs text-amber-600 mt-1 font-medium">
-                          <AlertTriangle className="w-3 h-3 mr-1" />
-                          Needs Review
-                        </div>
+                         <StatusIndicator status="NEEDS_REVIEW" />
                       )}
-                    </td>
-                    <td className="px-4 py-3 text-slate-600 truncate max-w-[150px]" title={item.meeting_title}>
-                      {item.meeting_title}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center text-slate-600">
-                        <User className="w-3.5 h-3.5 mr-1.5 opacity-50" />
-                        <span className={!item.owner_name ? "italic opacity-50" : ""}>
-                          {item.owner_name || "Unassigned"}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center text-slate-600">
-                        <Calendar className="w-3.5 h-3.5 mr-1.5 opacity-50" />
-                        <span className={!item.deadline ? "italic opacity-50" : (new Date(item.deadline) < new Date() && item.status !== "COMPLETED" ? "text-red-600 font-medium" : "")}>
-                          {item.deadline ? new Date(item.deadline).toLocaleDateString() : "None"}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      {getStatusBadge(item.status)}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <Link 
-                        href={`/dashboard/actions/${item.id}`}
-                        className="inline-flex items-center text-indigo-600 font-medium hover:text-indigo-800 transition-colors"
-                      >
-                        View
-                        <ChevronRight className="w-4 h-4 ml-0.5 opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-              </table>
+                   </div>
+                   
+                   <div className="col-span-1 flex justify-end">
+                      <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all" />
+                   </div>
+                 </Link>
+              ))}
             </div>
           </div>
         </>

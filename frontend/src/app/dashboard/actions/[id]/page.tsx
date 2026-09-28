@@ -3,33 +3,16 @@
 import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { fetchApi, ActionItemWithMeeting, ActionStatus } from "@/lib/api";
-import { AlertCircle, Calendar, ChevronLeft, Link as LinkIcon, User, CheckCircle2, Clock, XCircle, HelpCircle, AlertTriangle } from "lucide-react";
+import { AlertCircle, Calendar, ChevronLeft, Link as LinkIcon, User, CheckCircle2, ChevronRight, Video, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
-
-function getStatusIcon(status: ActionStatus) {
-  switch (status) {
-    case "COMPLETED": return <CheckCircle2 className="w-4 h-4 text-emerald-500" />;
-    case "IN_PROGRESS": return <Clock className="w-4 h-4 text-blue-500" />;
-    case "BLOCKED": return <XCircle className="w-4 h-4 text-red-500" />;
-    case "NEEDS_REVIEW": return <AlertTriangle className="w-4 h-4 text-amber-500" />;
-    default: return <HelpCircle className="w-4 h-4 text-slate-400" />;
-  }
-}
-
-function getStatusBadgeClass(status: ActionStatus) {
-  switch (status) {
-    case "COMPLETED": return "bg-emerald-50 text-emerald-700 border-emerald-200";
-    case "IN_PROGRESS": return "bg-blue-50 text-blue-700 border-blue-200";
-    case "BLOCKED": return "bg-red-50 text-red-700 border-red-200";
-    case "NEEDS_REVIEW": return "bg-amber-50 text-amber-700 border-amber-200";
-    default: return "bg-slate-50 text-slate-700 border-slate-200";
-  }
-}
+import { SectionHeader } from "@/components/ui/section-header";
+import { StatusIndicator } from "@/components/ui/status-indicator";
+import { EvidenceBlock } from "@/components/ui/evidence-block";
+import { AIContext } from "@/components/ui/ai-context";
 
 export default function ActionItemDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -95,31 +78,27 @@ export default function ActionItemDetailPage({ params }: { params: Promise<{ id:
       </div>
     );
   }
-      </div>
-    );
-  }
 
   const reviewTargetId = item.latest_review_id || item.id;
 
   return (
-    <div className="space-y-6 max-w-4xl">
-      <div>
-        <Link href="/dashboard/actions" className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-900 mb-4">
-          <ChevronLeft className="mr-1 h-4 w-4" />
-          Back to Action Items
-        </Link>
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Action Detail</h1>
-            <p className="text-slate-500 mt-1">Review and manage this task.</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-slate-700">Status:</span>
+    <div className="space-y-6">
+      <Link href="/dashboard/actions" className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-900 mb-2">
+        <ChevronLeft className="mr-1 h-4 w-4" />
+        Back to Action Items
+      </Link>
+      
+      <SectionHeader 
+        title="Action Detail" 
+        description="Review and manage this task."
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Action Status:</span>
             <select
               value={item.status}
               onChange={(e) => handleStatusChange(e.target.value as ActionStatus)}
               disabled={isUpdating}
-              className={`text-sm rounded-md border py-1.5 pl-3 pr-8 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${getStatusBadgeClass(item.status)}`}
+              className="text-sm font-medium rounded-md border border-slate-200 py-1.5 pl-3 pr-8 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
             >
               <option value="PENDING">Pending</option>
               <option value="IN_PROGRESS">In Progress</option>
@@ -127,124 +106,136 @@ export default function ActionItemDetailPage({ params }: { params: Promise<{ id:
               <option value="BLOCKED">Blocked</option>
               <option value="NEEDS_REVIEW" disabled>Needs Review</option>
             </select>
-      </Alert>
+        </div>
+      </SectionHeader>
 
       {item.review_status === "NEEDS_REVIEW" && (
-        <div className="rounded-md bg-amber-50 p-4 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <Alert variant="warning" className="border-amber-200 bg-amber-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex">
-            <AlertCircle className="h-5 w-5 text-amber-500 mr-3 shrink-0" />
+            <AlertCircle className="h-5 w-5 text-amber-600 mr-3 shrink-0" />
             <div>
-              <h3 className="text-sm font-medium text-amber-800">Review Required</h3>
+              <h3 className="text-sm font-bold text-amber-800">Review Required</h3>
               <div className="mt-1 text-sm text-amber-700">
                 This item was flagged during validation: {item.review_reasons?.join(", ")}
               </div>
             </div>
           </div>
           <Link href={`/dashboard/reviews/${reviewTargetId}`} className="shrink-0">
-            <Button variant="secondary" className="bg-white border-amber-300 text-amber-700 hover:bg-amber-50">
-              Go to Review
+            <Button variant="secondary" className="bg-white border-amber-300 text-amber-700 hover:bg-amber-100 font-semibold shadow-sm">
+              Resolve in Review Queue <ChevronRight className="w-4 h-4 ml-1.5" />
             </Button>
           </Link>
-        </div>
+        </Alert>
       )}
 
       {item.review_status === "REVIEWED" && item.latest_review_id && (
-        <div className="rounded-md bg-indigo-50 p-4 border border-indigo-200 flex justify-between items-center">
+        <Alert variant="success" className="border-emerald-200 bg-emerald-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex">
-            <CheckCircle2 className="h-5 w-5 text-indigo-500 mr-3 shrink-0" />
+            <CheckCircle2 className="h-5 w-5 text-emerald-600 mr-3 shrink-0" />
             <div>
-              <h3 className="text-sm font-medium text-indigo-800">Action Item Reviewed</h3>
-              <div className="mt-1 text-sm text-indigo-700">
+              <h3 className="text-sm font-bold text-emerald-800">Action Item Reviewed</h3>
+              <div className="mt-1 text-sm text-emerald-700">
                 This item has been reviewed and approved.
               </div>
             </div>
           </div>
-          <Link href={`/dashboard/reviews/${reviewTargetId}`} className="text-sm font-medium text-indigo-600 hover:text-indigo-800">
-            View Record
+          <Link href={`/dashboard/reviews/${reviewTargetId}`} className="shrink-0">
+            <Button variant="outline" className="bg-white border-emerald-300 text-emerald-700 hover:bg-emerald-100 font-semibold shadow-sm">
+              View Review Record <ChevronRight className="w-4 h-4 ml-1.5" />
+            </Button>
           </Link>
-        </div>
+        </Alert>
       )}
 
-      <Card>
-        <CardHeader className="border-b bg-slate-50/50 pb-6">
-          <div className="flex items-start justify-between gap-4">
-            <CardTitle className="text-xl leading-relaxed">{item.task}</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="space-y-6">
-            <div>
-              <h4 className="text-sm font-medium text-slate-500 mb-2">Assignment</h4>
-              <div className="flex items-center">
-                <User className="h-4 w-4 mr-2 text-slate-400" />
-                <span className={item.owner_name ? "text-slate-900" : "text-slate-400 italic"}>
-                  {item.owner_name || "Unassigned"}
-                </span>
-              </div>
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+         <div className="lg:col-span-2 space-y-6">
+            <Card className="shadow-sm border-slate-200">
+              <CardHeader className="border-b bg-slate-50/50 pb-6 rounded-t-xl">
+                <CardTitle className="text-xl leading-relaxed text-slate-900">{item.task}</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-100">
+                  <div className="p-6 space-y-6">
+                    <div>
+                      <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Assignment</h4>
+                      <div className="flex items-center text-sm">
+                        <User className="h-4 w-4 mr-2 text-slate-400" />
+                        <span className={item.owner_name ? "text-slate-900 font-medium" : "text-slate-400 italic"}>
+                          {item.owner_name || "Unassigned"}
+                        </span>
+                      </div>
+                    </div>
 
-            <div>
-              <h4 className="text-sm font-medium text-slate-500 mb-2">Deadline</h4>
-              <div className="flex items-center">
-                <Calendar className="h-4 w-4 mr-2 text-slate-400" />
-                <span className={item.deadline ? "text-slate-900" : "text-slate-400 italic"}>
-                  {item.deadline ? new Date(item.deadline).toLocaleString() : "No deadline set"}
-                </span>
-              </div>
-            </div>
+                    <div>
+                      <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Deadline</h4>
+                      <div className="flex items-center text-sm">
+                        <Calendar className="h-4 w-4 mr-2 text-slate-400" />
+                        <span className={item.deadline ? "text-slate-900 font-medium" : "text-slate-400 italic"}>
+                          {item.deadline ? new Date(item.deadline).toLocaleString() : "No deadline set"}
+                        </span>
+                      </div>
+                    </div>
 
-            <div>
-              <h4 className="text-sm font-medium text-slate-500 mb-2">Source Meeting</h4>
-              <div className="flex items-center">
-                <LinkIcon className="h-4 w-4 mr-2 text-slate-400" />
-                <Link href={`/dashboard/meetings/${item.meeting_id}`} className="text-indigo-600 hover:underline">
-                  {item.meeting_title}
-                </Link>
-              </div>
-            </div>
-          </div>
+                    <div>
+                      <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Source Meeting</h4>
+                      <div className="flex items-center text-sm">
+                        <Video className="h-4 w-4 mr-2 text-slate-400" />
+                        <Link href={`/dashboard/meetings/${item.meeting_id}`} className="text-indigo-600 font-medium hover:underline truncate">
+                          {item.meeting_title}
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
 
-          <div className="space-y-6">
-            <div>
-              <h4 className="text-sm font-medium text-slate-500 mb-2">Validation Status</h4>
-              <Badge variant="outline" className="capitalize">
-                {item.validation_status.toLowerCase()}
-              </Badge>
-            </div>
-            
-            <div>
-              <h4 className="text-sm font-medium text-slate-500 mb-2">Review Status</h4>
-              <Badge variant="outline" className="capitalize">
-                {item.review_status.toLowerCase()}
-              </Badge>
-            </div>
+                  <div className="p-6 space-y-6 bg-slate-50/30">
+                    <div>
+                      <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Validation State</h4>
+                      <StatusIndicator status={item.validation_status} />
+                    </div>
+                    
+                    <div>
+                      <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Review State</h4>
+                      <StatusIndicator status={item.review_status} />
+                    </div>
 
-            <div>
-              <h4 className="text-sm font-medium text-slate-500 mb-2">AI Confidence</h4>
-              <div className="flex items-center gap-3">
-                <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full rounded-full ${(item.confidence || 0) >= 0.8 ? "bg-emerald-500" : (item.confidence || 0) >= 0.5 ? "bg-amber-500" : "bg-red-500"}`}
-                    style={{ width: `${(item.confidence || 0) * 100}%` }}
-                  />
+                    {item.confidence !== null && (
+                      <div>
+                        <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">AI Confidence</h4>
+                        <div className="flex items-center bg-violet-50 text-violet-700 px-3 py-1.5 rounded-md text-sm font-medium border border-violet-100 w-fit">
+                          <Sparkles className="w-4 h-4 mr-1.5" />
+                          {Math.round(item.confidence * 100)}%
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <span className="text-sm text-slate-600 font-medium w-10 text-right">
-                  {Math.round((item.confidence || 0) * 100)}%
-                </span>
-              </div>
-            </div>
-          </div>
+              </CardContent>
+            </Card>
 
-          {item.evidence && (
-            <div className="col-span-1 md:col-span-2 mt-2 pt-6 border-t border-slate-100">
-              <h4 className="text-sm font-medium text-slate-500 mb-3">Extracted Evidence</h4>
-              <div className="bg-slate-50 rounded-md p-4 text-sm text-slate-700 italic border border-slate-100 leading-relaxed">
-                "{item.evidence}"
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            {item.evidence && (
+              <Card className="shadow-sm border-slate-200">
+                <CardHeader className="border-b bg-slate-50/50 py-4">
+                  <CardTitle className="text-sm font-semibold flex items-center">
+                    <LinkIcon className="w-4 h-4 mr-2 text-slate-400" />
+                    Source Evidence
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4">
+                   <EvidenceBlock evidence={item.evidence} sourceLocation={item.source_location ? JSON.stringify(item.source_location) : null} className="bg-yellow-50/50 border-yellow-100 shadow-none" />
+                </CardContent>
+              </Card>
+            )}
+         </div>
+
+         <div className="space-y-6">
+            <AIContext confidence={item.confidence} label="Extraction Profile">
+               <p className="text-sm text-slate-600 leading-relaxed">
+                  This action item was extracted from <strong>{item.meeting_title}</strong>. 
+                  The AI model assigned a {item.confidence !== null ? `${Math.round(item.confidence * 100)}%` : "N/A"} confidence score to this extraction based on the clarity of the commitment in the transcript.
+               </p>
+            </AIContext>
+         </div>
+      </div>
     </div>
   );
 }

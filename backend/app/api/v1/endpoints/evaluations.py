@@ -113,6 +113,10 @@ async def create_run(
     background_tasks: BackgroundTasks,
     current_user: User = Depends(deps.get_current_active_user),
 ) -> EvaluationRun:
+    from app.services.concurrency import acquire_user_advisory_lock, enforce_evaluation_concurrency_limit
+    await acquire_user_advisory_lock(db, current_user.id)
+    await enforce_evaluation_concurrency_limit(db, current_user.id)
+
     # Verify dataset belongs to user
     result = await db.execute(
         select(EvaluationDataset).where(EvaluationDataset.id == run_in.dataset_id, EvaluationDataset.user_id == current_user.id)

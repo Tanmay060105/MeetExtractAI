@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Video, Plus, Search, Calendar, FileText, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { Video, Plus, Search, Calendar, FileText } from "lucide-react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { fetchApi, Meeting } from "@/lib/api";
 import { Spinner } from "@/components/ui/spinner";
-import { Badge } from "@/components/ui/badge";
 import { Alert } from "@/components/ui/alert";
+import { SectionHeader } from "@/components/ui/section-header";
+import { StatusIndicator } from "@/components/ui/status-indicator";
 
 export default function MeetingsPage() {
   const [meetings, setMeetings] = useState<Meeting[]>([]);
@@ -35,42 +36,27 @@ export default function MeetingsPage() {
     m.title.toLowerCase().includes(search.toLowerCase())
   );
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "COMPLETED":
-        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100"><CheckCircle2 className="w-3 h-3 mr-1" /> Completed</Badge>;
-      case "PENDING":
-      case "PROCESSING":
-        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100"><Clock className="w-3 h-3 mr-1" /> Processing</Badge>;
-      case "FAILED":
-        return <Badge className="bg-red-100 text-red-800 hover:bg-red-100"><AlertCircle className="w-3 h-3 mr-1" /> Failed</Badge>;
-      default:
-        return <Badge>{status}</Badge>;
-    }
-  };
-
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Meetings</h1>
-          <p className="text-slate-500 mt-1">Manage and view all your processed meetings.</p>
-        </div>
+      <SectionHeader 
+        title="Meetings Intelligence" 
+        description="Manage and view all your processed meetings."
+      >
         <Link href="/dashboard/meetings/upload">
-          <Button>
+          <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-sm">
             <Plus className="mr-2 h-4 w-4" />
             Upload Meeting
           </Button>
         </Link>
-      </div>
+      </SectionHeader>
 
-      <div className="flex items-center space-x-2">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+      <div className="flex items-center space-x-2 bg-white p-3 border border-slate-200 rounded-xl shadow-sm">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
           <Input
             type="search"
-            placeholder="Search meetings..."
-            className="pl-9"
+            placeholder="Search meetings by title..."
+            className="pl-9 h-9 bg-slate-50 border-slate-200 focus:bg-white"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -83,21 +69,21 @@ export default function MeetingsPage() {
         </div>
       ) : error ? (
         <Alert variant="destructive">
-        {error}
-      </Alert>
+          {error}
+        </Alert>
       ) : meetings.length === 0 ? (
-        <Card>
+        <Card className="shadow-sm border-dashed">
           <CardContent className="p-0">
-            <div className="flex flex-col items-center justify-center p-12 text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
-                <Video className="h-8 w-8 text-slate-400" />
+            <div className="flex flex-col items-center justify-center p-16 text-center">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-indigo-50 border border-indigo-100">
+                <Video className="h-8 w-8 text-indigo-400" />
               </div>
-              <h3 className="mt-4 text-lg font-semibold text-slate-900">No meetings found</h3>
+              <h3 className="mt-4 text-lg font-medium text-slate-900">No meetings found</h3>
               <p className="mt-2 text-sm text-slate-500 max-w-sm">
                 You haven't uploaded any meetings yet. Get started by uploading a transcript.
               </p>
               <Link href="/dashboard/meetings/upload" className="mt-6">
-                <Button variant="secondary">
+                <Button variant="outline" className="font-medium">
                   Upload your first meeting
                 </Button>
               </Link>
@@ -105,31 +91,32 @@ export default function MeetingsPage() {
           </CardContent>
         </Card>
       ) : filteredMeetings.length === 0 ? (
-        <div className="text-center py-12 text-slate-500">
-          No meetings match your search.
+        <div className="text-center py-16 bg-slate-50 border border-slate-100 rounded-xl">
+          <h3 className="text-sm font-medium text-slate-900">No matches found</h3>
+          <p className="text-sm text-slate-500 mt-1">No meetings match your search query.</p>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
           {filteredMeetings.map((meeting) => (
-            <Link key={meeting.id} href={`/dashboard/meetings/${meeting.id}`}>
-              <Card className="h-full hover:shadow-md transition-shadow cursor-pointer border-slate-200 hover:border-indigo-300">
+            <Link key={meeting.id} href={`/dashboard/meetings/${meeting.id}`} className="group h-full">
+              <Card className="h-full border-slate-200 hover:border-indigo-300 transition-all shadow-sm hover:shadow-md flex flex-col">
                 <CardContent className="p-5 flex flex-col h-full">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="bg-slate-100 p-2 rounded-lg text-slate-500">
+                  <div className="flex justify-between items-start mb-4 gap-4">
+                    <div className="bg-indigo-50 text-indigo-600 p-2.5 rounded-lg shrink-0 group-hover:scale-105 transition-transform">
                       <FileText className="h-5 w-5" />
                     </div>
-                    {getStatusBadge(meeting.processing_status)}
+                    <StatusIndicator status={meeting.processing_status} spin={meeting.processing_status === "PROCESSING"} pulse={meeting.processing_status === "PROCESSING"} />
                   </div>
-                  <h3 className="font-semibold text-slate-900 line-clamp-2 mb-2 group-hover:text-indigo-600 transition-colors">
+                  <h3 className="font-semibold text-slate-900 text-lg leading-snug line-clamp-2 mb-3 group-hover:text-indigo-600 transition-colors">
                     {meeting.title}
                   </h3>
-                  <div className="mt-auto pt-4 flex flex-col gap-2 text-sm text-slate-500">
+                  <div className="mt-auto pt-4 border-t border-slate-100 flex flex-col gap-2.5 text-sm text-slate-600">
                     <div className="flex items-center">
-                      <Calendar className="mr-2 h-4 w-4" />
-                      {new Date(meeting.created_at).toLocaleDateString()}
+                      <Calendar className="mr-2 h-4 w-4 text-slate-400" />
+                      <span className="font-medium">{new Date(meeting.created_at).toLocaleDateString()}</span>
                     </div>
                     <div className="flex items-center text-xs">
-                      <span className="bg-slate-100 px-2 py-1 rounded text-slate-600">
+                      <span className="bg-slate-100 px-2 py-1 rounded text-slate-600 font-medium tracking-wide uppercase">
                         {meeting.source_type || "UNKNOWN"}
                       </span>
                     </div>

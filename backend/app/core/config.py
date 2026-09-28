@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     API_V1_PREFIX: str = "/api/v1"
     LOG_LEVEL: str = "INFO"
 
+    # CORS
+    CORS_ORIGINS: str = "http://localhost:3000"
+
     # Backend
     BACKEND_HOST: str = "0.0.0.0"
     BACKEND_PORT: int = 8000

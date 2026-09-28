@@ -1,4 +1,5 @@
 import pytest
+import pytest_asyncio
 import uuid
 import csv
 import io
@@ -9,17 +10,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.meeting import Meeting
 from app.models.action_item import ActionItem, ActionStatus, ValidationStatus, ReviewStatus
 
-@pytest.fixture
-async def sample_action_items(db: AsyncSession, test_user, test_user_token_headers):
+@pytest_asyncio.fixture
+async def sample_action_items(db_session: AsyncSession, normal_user_token_headers):
+    import jwt
+    from app.core.config import settings
+    token = normal_user_token_headers["Authorization"].replace("Bearer ", "")
+    payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+    user_id = payload.get("sub")
     # Create meeting
     meeting = Meeting(
         id=uuid.uuid4(),
-        user_id=test_user.id,
+        user_id=uuid.UUID(user_id),
         title="Export Test Meeting",
         processing_status="COMPLETED"
     )
-    db.add(meeting)
-    await db.commit()
+    db_session.add(meeting)
+    await db_session.commit()
     
     # Create action items with interesting characters
     items = []
@@ -35,18 +41,25 @@ async def sample_action_items(db: AsyncSession, test_user, test_user_token_heade
             review_status=ReviewStatus.REVIEWED
         )
         items.append(item)
-        db.add(item)
+        db_session.add(item)
     
-    await db.commit()
+    await db_session.commit()
     for item in items:
-        await db.refresh(item)
+        await db_session.refresh(item)
         
     return items
 
-@pytest.fixture
-async def other_user_action_items(db: AsyncSession, create_test_user):
-    # Create another user and meeting
-    other_user = await create_test_user(email="other.export@example.com", password="password")
+@pytest_asyncio.fixture
+async def other_user_action_items(db_session: AsyncSession):
+    from app.models.user import User
+    from app.core.security import get_password_hash
+    other_user = User(
+        email="other.export@example.com",
+        full_name="Other User",
+        hashed_password=get_password_hash("password")
+    )
+    db_session.add(other_user)
+    await db_session.commit()
     
     meeting = Meeting(
         id=uuid.uuid4(),
@@ -54,30 +67,32 @@ async def other_user_action_items(db: AsyncSession, create_test_user):
         title="Other User Meeting",
         processing_status="COMPLETED"
     )
-    db.add(meeting)
-    await db.commit()
+    db_session.add(meeting)
+    await db_session.commit()
     
     item = ActionItem(
         id=uuid.uuid4(),
         meeting_id=meeting.id,
         task="Unauthorized Task",
         status=ActionStatus.PENDING,
+        validation_status=ValidationStatus.VALID,
+        review_status=ReviewStatus.REVIEWED
     )
-    db.add(item)
-    await db.commit()
-    await db.refresh(item)
+    db_session.add(item)
+    await db_session.commit()
+    await db_session.refresh(item)
     
     return [item]
 
 
 @pytest.mark.asyncio
-async def test_export_csv_success(async_client: AsyncClient, test_user_token_headers, sample_action_items):
+async def test_export_csv_success(async_client: AsyncClient, normal_user_token_headers, sample_action_items):
     # Test ordering too! Let's reverse the order of items.
     ids = [str(item.id) for item in reversed(sample_action_items)]
     
     response = await async_client.post(
         "/api/v1/export/action-items",
-        headers=test_user_token_headers,
+        headers=normal_user_token_headers,
         json={"format": "csv", "action_item_ids": ids}
     )
     
@@ -107,12 +122,12 @@ async def test_export_csv_success(async_client: AsyncClient, test_user_token_hea
 
 
 @pytest.mark.asyncio
-async def test_export_json_success(async_client: AsyncClient, test_user_token_headers, sample_action_items):
+async def test_export_json_success(async_client: AsyncClient, normal_user_token_headers, sample_action_items):
     ids = [str(sample_action_items[1].id), str(sample_action_items[0].id)]
     
     response = await async_client.post(
         "/api/v1/export/action-items",
-        headers=test_user_token_headers,
+        headers=normal_user_token_headers,
         json={"format": "json", "action_item_ids": ids}
     )
     
@@ -135,21 +150,21 @@ async def test_export_json_success(async_client: AsyncClient, test_user_token_he
 
 
 @pytest.mark.asyncio
-async def test_export_empty_list(async_client: AsyncClient, test_user_token_headers):
+async def test_export_empty_list(async_client: AsyncClient, normal_user_token_headers):
     response = await async_client.post(
         "/api/v1/export/action-items",
-        headers=test_user_token_headers,
+        headers=normal_user_token_headers,
         json={"format": "csv", "action_item_ids": []}
     )
     assert response.status_code == 400
 
 
 @pytest.mark.asyncio
-async def test_export_nonexistent_id(async_client: AsyncClient, test_user_token_headers, sample_action_items):
+async def test_export_nonexistent_id(async_client: AsyncClient, normal_user_token_headers, sample_action_items):
     ids = [str(sample_action_items[0].id), str(uuid.uuid4())]
     response = await async_client.post(
         "/api/v1/export/action-items",
-        headers=test_user_token_headers,
+        headers=normal_user_token_headers,
         json={"format": "json", "action_item_ids": ids}
     )
     # Should be 403 or 404. We chose 403 for unauthorized/not found combined.
@@ -157,11 +172,11 @@ async def test_export_nonexistent_id(async_client: AsyncClient, test_user_token_
 
 
 @pytest.mark.asyncio
-async def test_export_unauthorized_id(async_client: AsyncClient, test_user_token_headers, sample_action_items, other_user_action_items):
+async def test_export_unauthorized_id(async_client: AsyncClient, normal_user_token_headers, sample_action_items, other_user_action_items):
     ids = [str(sample_action_items[0].id), str(other_user_action_items[0].id)]
     response = await async_client.post(
         "/api/v1/export/action-items",
-        headers=test_user_token_headers,
+        headers=normal_user_token_headers,
         json={"format": "csv", "action_item_ids": ids}
     )
     # Should reject the entire request if ANY ID is unauthorized

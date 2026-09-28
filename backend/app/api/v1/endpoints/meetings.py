@@ -49,6 +49,10 @@ async def create_meeting_from_text(
     if not data.text.strip():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Empty or whitespace-only transcript text.")
 
+    from app.services.concurrency import acquire_user_advisory_lock, enforce_meeting_concurrency_limit
+    await acquire_user_advisory_lock(db, current_user.id)
+    await enforce_meeting_concurrency_limit(db, current_user.id)
+
     normalized = ingestion_service.normalize_text(data.text)
     
     # Defaults to TEXT if not provided
@@ -76,6 +80,10 @@ async def create_meeting_from_upload(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ):
+    from app.services.concurrency import acquire_user_advisory_lock, enforce_meeting_concurrency_limit
+    await acquire_user_advisory_lock(db, current_user.id)
+    await enforce_meeting_concurrency_limit(db, current_user.id)
+
     # Enforce size limit by incremental read
     file_bytes = bytearray()
     while True:
