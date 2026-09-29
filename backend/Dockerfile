@@ -16,4 +16,4 @@ RUN uv sync --frozen
 COPY . .
 
 # The command is provided by docker-compose.yml for dev, but we set a default
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["/bin/sh", "-c", "uv run alembic upgrade head && exec uv run uvicorn app.main:app --host 0.0.0.0 --port 8000"]
